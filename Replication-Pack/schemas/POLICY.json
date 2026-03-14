@@ -1,0 +1,48 @@
+{
+  "schema_version": "rpb-policy-0.1",
+  "policy_id": "default-mvp",
+  "policy_version": "0.1.0",
+  "profiles": {
+    "P0": true,
+    "P1": true,
+    "P2": true,
+    "P3": false
+  },
+  "signature_thresholds": {
+    "P0": 1,
+    "P1": 1,
+    "P2": 1,
+    "P3": 2
+  },
+  "requirements": {
+    "P0": {
+      "must_include_paths": ["MANIFEST.json", "HASHES.json", "SIGNATURES/"],
+      "must_have_commands": [],
+      "must_have_evidence_types": [],
+      "must_reference_spec_properties": false
+    },
+    "P1": {
+      "must_include_paths": ["VERIFY/", "MANIFEST.json", "HASHES.json", "SIGNATURES/"],
+      "must_have_commands": [],
+      "must_have_evidence_types": [],
+      "must_reference_spec_properties": false
+    },
+    "P2": {
+      "must_include_paths": ["EVIDENCE/TESTS/", "VERIFY/", "MANIFEST.json", "HASHES.json", "SIGNATURES/"],
+      "must_have_commands": ["tests"],
+      "must_have_evidence_types": ["tests"],
+      "must_reference_spec_properties": false
+    },
+    "P3": {
+      "must_include_paths": ["SPEC/", "EVIDENCE/PROOFS/", "VERIFY/", "MANIFEST.json", "HASHES.json", "SIGNATURES/"],
+      "must_have_commands": ["proofs"],
+      "must_have_evidence_types": ["proofs"],
+      "must_reference_spec_properties": true
+    }
+  },
+  "allowed_tools": {
+    "build": ["bash", "make", "python"],
+    "tests": ["pytest", "go test", "cargo test", "npm test"],
+    "proofs": ["lean", "coqc", "isabelle", "tlc", "apalache", "z3"]
+  }
+}

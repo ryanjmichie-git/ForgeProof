@@ -1,0 +1,99 @@
+{
+  "schema_version": "rpb-manifest-0.1",
+  "pack_id": "018f0b2e-7c2f-7e2a-9b0c-3c2a1b8b0d12",
+  "created_utc": "2026-02-20T23:15:00Z",
+  "producer": {
+    "name": "rpb",
+    "version": "0.1.0",
+    "build": "local-dev",
+    "host_fingerprint": "9a1c1b0d4f3e9c8a..."
+  },
+  "subject": {
+    "name": "safe-divide-demo",
+    "version": "0.1.0",
+    "vcs": {
+      "type": "git",
+      "repo_url": "https://example.org/repo/safe-divide-demo",
+      "commit": "7d9c0b3a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e",
+      "dirty": false
+    }
+  },
+  "claims": [
+    {
+      "claim_id": "CLAIM-INTEGRITY-001",
+      "profile": "P0",
+      "label": "Integrity: contents match signed hashes",
+      "properties": []
+    },
+    {
+      "claim_id": "CLAIM-TESTED-001",
+      "profile": "P2",
+      "label": "Tested: pytest suite passed in pinned container",
+      "properties": []
+    }
+  ],
+  "environment": {
+    "type": "container",
+    "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "os_arch": "linux/amd64",
+    "toolchain": [
+      { "name": "python", "version": "3.11.7" },
+      { "name": "pytest", "version": "8.0.0" }
+    ]
+  },
+  "commands": {
+    "build": [],
+    "tests": ["pytest -q --junitxml=EVIDENCE/TESTS/junit.xml"],
+    "proofs": []
+  },
+  "artifacts": [
+    { "path": "MANIFEST.json", "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "size_bytes": 2100, "kind": "manifest" },
+    { "path": "HASHES.json", "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "size_bytes": 1800, "kind": "hashlist" },
+    { "path": "POLICY.json", "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "size_bytes": 1600, "kind": "policy" },
+
+    { "path": "SPEC/SPEC_INDEX.md", "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "size_bytes": 420, "kind": "spec" },
+    { "path": "SPEC/PROP_MEMSAFE_001.md", "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "size_bytes": 620, "kind": "spec" },
+
+    { "path": "SOURCE/src/safe_divide.py", "sha256": "6666666666666666666666666666666666666666666666666666666666666666", "size_bytes": 340, "kind": "source" },
+    { "path": "SOURCE/tests/test_safe_divide.py", "sha256": "7777777777777777777777777777777777777777777777777777777777777777", "size_bytes": 560, "kind": "source" },
+    { "path": "SOURCE/pyproject.toml", "sha256": "8888888888888888888888888888888888888888888888888888888888888888", "size_bytes": 300, "kind": "source" },
+
+    { "path": "EVIDENCE/TESTS/tests_stdout.txt", "sha256": "9999999999999999999999999999999999999999999999999999999999999999", "size_bytes": 220, "kind": "test_result" },
+    { "path": "EVIDENCE/TESTS/tests_stderr.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "size_bytes": 0, "kind": "test_result" },
+    { "path": "EVIDENCE/TESTS/junit.xml", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "size_bytes": 980, "kind": "test_result" },
+
+    { "path": "LOGS/runner_log.txt", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "size_bytes": 540, "kind": "log" },
+
+    { "path": "VERIFY/verify_instructions.txt", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "size_bytes": 700, "kind": "other" },
+    { "path": "VERIFY/verify.sh", "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "size_bytes": 410, "kind": "other" },
+
+    { "path": "SIGNATURES/signer-1.json", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "size_bytes": 520, "kind": "signature" },
+    { "path": "SIGNATURES/signer-1.sig", "sha256": "1212121212121212121212121212121212121212121212121212121212121212", "size_bytes": 96, "kind": "signature" }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "EVID-TESTS-001",
+      "type": "tests",
+      "command": "pytest -q --junitxml=EVIDENCE/TESTS/junit.xml",
+      "exit_code": 0,
+      "stdout_path": "EVIDENCE/TESTS/tests_stdout.txt",
+      "stderr_path": "EVIDENCE/TESTS/tests_stderr.txt",
+      "outputs": ["EVIDENCE/TESTS/junit.xml"],
+      "started_utc": "2026-02-20T23:15:10Z",
+      "ended_utc": "2026-02-20T23:15:18Z"
+    }
+  ],
+  "policy": {
+    "policy_id": "default-mvp",
+    "policy_version": "0.1.0",
+    "policy_sha256": "abababababababababababababababababababababababababababababababab"
+  },
+  "signing": {
+    "root_digest_sha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "signers": ["dev-ed25519-key-01"]
+  },
+  "redactions": [
+    { "pattern": ".env", "reason": "Prevent secret leakage" },
+    { "pattern": "**/*_key*", "reason": "Prevent private key inclusion" }
+  ]
+}

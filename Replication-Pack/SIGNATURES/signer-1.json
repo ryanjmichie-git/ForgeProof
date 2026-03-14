@@ -1,0 +1,10 @@
+{
+  "key_id": "dev-ed25519-key-01",
+  "algorithm": "ed25519",
+  "created_utc": "2026-02-20T23:15:21Z",
+  "signer_name": "Ryan Dev Key (local)",
+  "key_source": "file",
+  "signature_over": {
+    "root_digest_sha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  }
+}

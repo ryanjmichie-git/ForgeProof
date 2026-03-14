@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/rpb-policy-0.1.schema.json",
+  "title": "Replication Pack Builder Policy Schema v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_id",
+    "policy_version",
+    "profiles",
+    "signature_thresholds",
+    "requirements",
+    "allowed_tools"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "rpb-policy-0.1" },
+    "policy_id": { "type": "string", "minLength": 1 },
+    "policy_version": { "type": "string", "minLength": 1 },
+
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["P0", "P1", "P2", "P3"],
+      "properties": {
+        "P0": { "type": "boolean" },
+        "P1": { "type": "boolean" },
+        "P2": { "type": "boolean" },
+        "P3": { "type": "boolean" }
+      }
+    },
+
+    "signature_thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["P0", "P1", "P2", "P3"],
+      "properties": {
+        "P0": { "type": "integer", "minimum": 1 },
+        "P1": { "type": "integer", "minimum": 1 },
+        "P2": { "type": "integer", "minimum": 1 },
+        "P3": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["P0", "P1", "P2", "P3"],
+      "properties": {
+        "P0": { "$ref": "#/$defs/profileRequirements" },
+        "P1": { "$ref": "#/$defs/profileRequirements" },
+        "P2": { "$ref": "#/$defs/profileRequirements" },
+        "P3": { "$ref": "#/$defs/profileRequirements" }
+      }
+    },
+
+    "allowed_tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tests", "proofs", "build"],
+      "properties": {
+        "build": { "type": "array", "items": { "type": "string" } },
+        "tests": { "type": "array", "items": { "type": "string" } },
+        "proofs": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "profileRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "must_include_paths",
+        "must_have_commands",
+        "must_have_evidence_types",
+        "must_reference_spec_properties"
+      ],
+      "properties": {
+        "must_include_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns or directory prefixes required in the pack."
+        },
+        "must_have_commands": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["build", "tests", "proofs"] }
+        },
+        "must_have_evidence_types": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["build", "tests", "proofs"] }
+        },
+        "must_reference_spec_properties": {
+          "type": "boolean",
+          "description": "If true, claims must reference at least one /SPEC/ property file."
+        }
+      }
+    }
+  }
+}

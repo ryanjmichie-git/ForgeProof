@@ -1,0 +1,30 @@
+{
+  "hash_algo": "sha256",
+  "generated_utc": "2026-02-20T23:15:20Z",
+  "files": [
+    { "path": "README.txt", "sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f", "size_bytes": 650 },
+
+    { "path": "MANIFEST.json", "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "size_bytes": 2100 },
+    { "path": "HASHES.json", "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "size_bytes": 1800 },
+    { "path": "POLICY.json", "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "size_bytes": 1600 },
+
+    { "path": "SPEC/SPEC_INDEX.md", "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "size_bytes": 420 },
+    { "path": "SPEC/PROP_MEMSAFE_001.md", "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "size_bytes": 620 },
+
+    { "path": "SOURCE/src/safe_divide.py", "sha256": "6666666666666666666666666666666666666666666666666666666666666666", "size_bytes": 340 },
+    { "path": "SOURCE/tests/test_safe_divide.py", "sha256": "7777777777777777777777777777777777777777777777777777777777777777", "size_bytes": 560 },
+    { "path": "SOURCE/pyproject.toml", "sha256": "8888888888888888888888888888888888888888888888888888888888888888", "size_bytes": 300 },
+
+    { "path": "EVIDENCE/TESTS/tests_stdout.txt", "sha256": "9999999999999999999999999999999999999999999999999999999999999999", "size_bytes": 220 },
+    { "path": "EVIDENCE/TESTS/tests_stderr.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "size_bytes": 0 },
+    { "path": "EVIDENCE/TESTS/junit.xml", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "size_bytes": 980 },
+
+    { "path": "LOGS/runner_log.txt", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "size_bytes": 540 },
+
+    { "path": "VERIFY/verify_instructions.txt", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "size_bytes": 700 },
+    { "path": "VERIFY/verify.sh", "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "size_bytes": 410 },
+
+    { "path": "SIGNATURES/signer-1.json", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "size_bytes": 520 },
+    { "path": "SIGNATURES/signer-1.sig", "sha256": "1212121212121212121212121212121212121212121212121212121212121212", "size_bytes": 96 }
+  ]
+}

@@ -1,0 +1,38 @@
+# ForgeProof project configuration
+# Place this file in your repo root to customize ForgeProof behavior.
+
+# Paths the agent is allowed to create/modify (glob patterns)
+allowed_paths:
+  - "src/**/*.py"
+  - "tests/**/*.py"
+  - "docs/**/*.md"
+
+# Paths the agent must never touch
+denied_paths:
+  - ".env"
+  - "**/*.key"
+  - "**/*.pem"
+  - ".gitlab-ci.yml"
+
+# Evaluation commands (run in order)
+evaluation:
+  commands:
+    - name: tests
+      run: "python -m pytest -q"
+      required: true
+    - name: lint
+      run: "python -m ruff check ."
+      required: true
+    - name: typecheck
+      run: "python -m mypy src/"
+      required: false
+
+# Review-ready gate thresholds
+gates:
+  all_required_commands_pass: true
+  requirements_coverage_min: 80
+
+# Signing
+signing:
+  key_path: "devkey.ed25519"
+  policy_profile: "P2"

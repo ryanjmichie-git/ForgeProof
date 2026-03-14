@@ -1,0 +1,17 @@
+Verification (offline):
+
+1) Unpack the .rpack file (tar/zstd or zip depending on your packer).
+2) Verify file integrity:
+   - Recompute SHA-256 for each file listed in HASHES.json
+   - Ensure every hash matches
+
+3) Verify signature authenticity:
+   - Compute ROOT_DIGEST = SHA-256(canonical(MANIFEST.json) || canonical(HASHES.json) || canonical(POLICY.json))
+   - Verify SIGNATURES/signer-1.sig is a valid Ed25519 signature over ROOT_DIGEST using the public key for key_id=dev-ed25519-key-01
+
+4) Policy compliance:
+   - POLICY.json disallows P3 (MathSafe). This pack includes only P0/P2 claims.
+   - Confirm evidence exists for tests: EVIDENCE/TESTS/* and EVID-TESTS-001 exit_code=0.
+
+Optional re-check (requires container runtime and image digest availability):
+   - Run the test command in MANIFEST.json inside the container specified by environment.image_digest.
