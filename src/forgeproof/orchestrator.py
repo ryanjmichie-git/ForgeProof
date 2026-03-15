@@ -88,6 +88,7 @@ class Orchestrator:
             elapsed = int((time.monotonic() - t0) * 1000)
             self.decision_log.append(
                 phase=name,
+                model_id=self.claude.model_id if self.claude else "",
                 decision_summary=summary or f"Phase {name} completed",
                 status="success",
                 duration_ms=elapsed,
@@ -104,6 +105,7 @@ class Orchestrator:
             log.exception("Phase '%s' raised an exception", name)
             self.decision_log.append(
                 phase=name,
+                model_id=self.claude.model_id if self.claude else "",
                 decision_summary=f"FAILED: {exc}",
                 status="failure",
                 duration_ms=elapsed,
@@ -150,6 +152,16 @@ class Orchestrator:
     def _phase_package(self) -> str:
         log.info("Phase 4: Building provenance pack")
 
+        # Record a pre-pack entry so the decision log inside the pack
+        # includes a packaging record (the post-pack completion entry
+        # from _run_phase cannot be included since the pack is already sealed).
+        self.decision_log.append(
+            phase="package_started",
+            model_id=self.claude.model_id if self.claude else "",
+            decision_summary="Building provenance pack with RPB signing",
+            status="success",
+        )
+
         # Build staging directory
         staging_dir = build_staging_directory(
             self.state,
@@ -176,4 +188,19 @@ class Orchestrator:
         sign_and_pack(staging_dir, key_path, output_path)
         self.state.pack_path = str(output_path)
 
-        return f"Pack created at {output_path} ({output_path.stat().st_size} bytes)"
+        # Create MR and post comment (GitLab CI mode only)
+        mr_url = ""
+        if self.config.gitlab_token and self.config.project_id:
+            from forgeproof.gitlab.mr_creator import run_mr_flow
+
+            try:
+                mr = run_mr_flow(self.config, self.state)
+                mr_url = mr.get("web_url", "")
+            except Exception:
+                log.warning("MR creation failed", exc_info=True)
+
+        pack_size = output_path.stat().st_size
+        parts = [f"Pack created ({pack_size} bytes)"]
+        if mr_url:
+            parts.append(f"MR: {mr_url}")
+        return ", ".join(parts)

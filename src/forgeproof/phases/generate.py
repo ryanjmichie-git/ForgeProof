@@ -108,8 +108,11 @@ def _parse_changes(response: str) -> list[FileChange]:
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
-        log.error("Failed to parse generation JSON: %.200s", text)
-        return []
+        # Fallback: try to find JSON object in the response
+        data = _extract_json_object(text)
+        if data is None:
+            log.error("Failed to parse generation JSON: %.200s", text)
+            return []
 
     changes = []
     for c in data.get("changes", []):
@@ -122,6 +125,18 @@ def _parse_changes(response: str) -> list[FileChange]:
             action=c.get("action", "create"),
         ))
     return changes
+
+
+def _extract_json_object(text: str) -> dict | None:
+    """Try to extract a JSON object from text that may have surrounding prose."""
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(text[start:end + 1])
+        except json.JSONDecodeError:
+            pass
+    return None
 
 
 def _strip_code_fence(text: str) -> str:

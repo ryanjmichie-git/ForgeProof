@@ -59,6 +59,10 @@ class ClaudeClient:
     def call_count(self) -> int:
         return self._call_count
 
+    @property
+    def model_id(self) -> str:
+        return DEFAULT_MODEL
+
     def ask(
         self,
         prompt: str,
@@ -119,5 +123,13 @@ class ClaudeClient:
         try:
             return json.loads(text)
         except json.JSONDecodeError:
+            # Fallback: extract first JSON object from text
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end > start:
+                try:
+                    return json.loads(text[start:end + 1])
+                except json.JSONDecodeError:
+                    pass
             log.error("Failed to parse Claude response as JSON: %s...", text[:200])
             raise

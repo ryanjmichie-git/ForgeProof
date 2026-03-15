@@ -49,6 +49,8 @@ class DecisionLog:
         *,
         agent: str = "orchestrator",
         backend: str = "claude",
+        model_id: str = "",
+        temperature: float | None = None,
         input_refs: list[str] | None = None,
         output_refs: list[str] | None = None,
         prompt_path: str = "",
@@ -63,12 +65,14 @@ class DecisionLog:
         """Append a decision log entry and return it."""
         self._seq += 1
 
-        entry = {
+        entry: dict[str, Any] = {
             "seq": self._seq,
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "phase": phase,
             "agent": agent,
             "backend": backend,
+            "model_id": model_id,
+            "temperature": temperature,
             "input_refs": input_refs or [],
             "output_refs": output_refs or [],
             "prompt_path": prompt_path,

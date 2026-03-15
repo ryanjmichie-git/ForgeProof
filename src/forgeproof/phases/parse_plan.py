@@ -110,8 +110,11 @@ def _parse_plan_response(response: str) -> Plan:
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
-        log.error("Failed to parse plan JSON from Claude response: %.200s", text)
-        return Plan()
+        # Fallback: try to find JSON object in the response
+        data = _extract_json_object(text)
+        if data is None:
+            log.error("Failed to parse plan JSON from Claude response: %.200s", text)
+            return Plan()
 
     requirements = []
     for r in data.get("requirements", []):
@@ -135,11 +138,28 @@ def _parse_plan_response(response: str) -> Plan:
     )
 
 
+def _extract_json_object(text: str) -> dict | None:
+    """Try to extract a JSON object from text that may have surrounding prose."""
+    # Find first { and last }
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(text[start:end + 1])
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
 def _strip_code_fence(text: str) -> str:
-    """Remove markdown code fences from Claude output."""
+    """Remove markdown code fences from Claude output.
+
+    Handles ```json, ```python, and bare ``` openers.
+    """
     text = text.strip()
     if text.startswith("```"):
         lines = text.splitlines()
+        # Skip first line (```json, ```python, or bare ```)
         start = 1
         end = len(lines) - 1 if lines[-1].strip() == "```" else len(lines)
         text = "\n".join(lines[start:end]).strip()
