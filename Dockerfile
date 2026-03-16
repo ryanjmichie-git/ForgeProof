@@ -1,21 +1,20 @@
 FROM python:3.11-slim
 
-# Install git (needed for repo operations)
+# Install git (needed for repo clone in Duo Agent Platform)
 RUN apt-get update && apt-get install -y --no-install-recommends git && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy dependency spec first for layer caching
+# Copy everything needed for install + runtime
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
-
-# Copy application code
 COPY src/ src/
 COPY Replication-Pack/ Replication-Pack/
+COPY demo/ demo/
+COPY tests/ tests/
 
-# Re-install with source
-RUN pip install --no-cache-dir -e .
+# Install with dev deps (pytest needed by eval phase, ruff already in main deps)
+RUN pip install --no-cache-dir -e ".[dev]"
 
 # Default entrypoint: run the ForgeProof pipeline
 # GitLab Duo Agent Platform sets env vars:

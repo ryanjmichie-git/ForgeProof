@@ -46,6 +46,8 @@ class ForgeProofConfig(BaseModel):
     ai_flow_context: str = ""
     ai_flow_input: str = ""
     project_id: int = 0
+    project_url: str = ""
+    default_branch: str = "main"
 
 
 def load_config(repo_root: Path | None = None) -> ForgeProofConfig:
@@ -80,5 +82,7 @@ def load_config(repo_root: Path | None = None) -> ForgeProofConfig:
     cfg.ai_flow_context = os.environ.get("AI_FLOW_CONTEXT", "")
     cfg.ai_flow_input = os.environ.get("AI_FLOW_INPUT", "")
     cfg.project_id = int(os.environ.get("CI_PROJECT_ID", "0"))
+    cfg.project_url = os.environ.get("CI_PROJECT_URL", "")
+    cfg.default_branch = os.environ.get("CI_DEFAULT_BRANCH", "main")
 
     return cfg

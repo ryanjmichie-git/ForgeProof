@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
-import sys
+import os
+import subprocess
+import tempfile
 from pathlib import Path
 
 import typer
@@ -24,9 +26,41 @@ def _setup_logging(verbose: bool = False) -> None:
     )
 
 
+def _auto_clone_repo(log: logging.Logger) -> Path | None:
+    """Clone the target repo in CI when no local repo path is available.
+
+    Uses CI_PROJECT_URL + CI_JOB_TOKEN for authentication.
+    Returns the cloned repo path, or None if not in CI mode.
+    """
+    project_url = os.environ.get("CI_PROJECT_URL", "")
+    job_token = os.environ.get("CI_JOB_TOKEN", "")
+    if not project_url or not job_token:
+        return None
+
+    # Build authenticated clone URL:
+    #   https://gitlab.com/group/project → https://gitlab-ci-token:<token>@gitlab.com/group/project
+    clone_url = project_url.replace("https://", f"https://gitlab-ci-token:{job_token}@")
+    clone_dir = Path(tempfile.mkdtemp(prefix="forgeproof_repo_"))
+    branch = os.environ.get("CI_DEFAULT_BRANCH", "main")
+
+    log.info("Auto-cloning repo from %s (branch: %s)", project_url, branch)
+    result = subprocess.run(
+        ["git", "clone", "--depth=1", f"--branch={branch}", clone_url, str(clone_dir)],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    if result.returncode != 0:
+        log.error("git clone failed: %s", result.stderr)
+        return None
+
+    log.info("Cloned repo to %s", clone_dir)
+    return clone_dir
+
+
 @app.command()
 def run(
-    repo: Path = typer.Option(Path.cwd(), help="Repository root"),
+    repo: Path = typer.Option(None, help="Repository root (auto-detected in CI)"),
     issue_file: Path | None = typer.Option(None, help="Local issue JSON/MD file (dev mode)"),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
     output_json: bool = typer.Option(False, "--json", help="Output run state as JSON"),
@@ -35,7 +69,14 @@ def run(
     _setup_logging(verbose)
     log = logging.getLogger("forgeproof")
 
-    config = load_config(repo)
+    # Determine repo root: explicit flag > auto-clone in CI > cwd
+    repo_root = repo
+    if repo_root is None:
+        repo_root = _auto_clone_repo(log)
+    if repo_root is None:
+        repo_root = Path.cwd()
+
+    config = load_config(repo_root)
     orch = Orchestrator(config)
 
     # Load issue from file in local dev mode
@@ -71,9 +112,8 @@ def verify(
     log = logging.getLogger("forgeproof")
 
     # Bootstrap RPB imports
-    rpb_root = Path(__file__).resolve().parents[2] / "Replication-Pack"
-    if str(rpb_root) not in sys.path:
-        sys.path.insert(0, str(rpb_root))
+    from forgeproof.provenance.packer import _ensure_rpb_importable
+    _ensure_rpb_importable()
 
     from internal.rpb.verify_signatures import verify_pack_directory  # type: ignore[import-untyped]
     from internal.rpb.pack_reader import extract_rpack  # type: ignore[import-untyped]
@@ -133,11 +173,11 @@ def _print_summary(state) -> None:
 
     if state.evaluation:
         ev = state.evaluation
-        typer.echo(f"\nEvaluation:")
+        typer.echo("\nEvaluation:")
         typer.echo(f"  Review-ready: {ev.review_ready}")
         typer.echo(f"  Coverage: {ev.requirements_coverage:.0f}%")
         if ev.gate_failures:
-            typer.echo(f"  Gate failures:")
+            typer.echo("  Gate failures:")
             for f in ev.gate_failures:
                 typer.echo(f"    - {f}")
 

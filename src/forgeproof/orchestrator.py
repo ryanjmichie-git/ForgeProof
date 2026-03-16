@@ -17,7 +17,6 @@ from forgeproof.claude.client import ClaudeClient
 from forgeproof.claude.recorder import Recorder
 from forgeproof.config import ForgeProofConfig
 from forgeproof.models import (
-    EvalScorecard,
     PhaseResult,
     PhaseStatus,
     RunState,
@@ -177,8 +176,9 @@ class Orchestrator:
         # Sign and pack
         key_path = self.config.repo_root / self.config.signing.key_path
         if not key_path.exists():
-            # Try RPB's dev key as fallback
-            rpb_key = Path(__file__).resolve().parents[1] / "Replication-Pack" / "devkey.ed25519"
+            # Try RPB's dev key as fallback (works in both local and Docker)
+            from forgeproof.provenance.packer import _RPB_ROOT
+            rpb_key = _RPB_ROOT / "devkey.ed25519"
             if rpb_key.exists():
                 key_path = rpb_key
             else:
