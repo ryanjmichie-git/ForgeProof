@@ -47,6 +47,13 @@ class GitLabAPI:
     def get_project(self, project_id: int) -> dict[str, Any]:
         return self._get(f"/projects/{project_id}")
 
+    # ---- Issues ----
+
+    def get_issue(self, project_id: int, issue_iid: int) -> dict[str, Any]:
+        """Fetch a single issue by its internal ID."""
+        log.info("Fetching issue #%d from project %d", issue_iid, project_id)
+        return self._get(f"/projects/{project_id}/issues/{issue_iid}")
+
     # ---- Branches ----
 
     def create_branch(self, project_id: int, branch: str, ref: str = "main") -> dict[str, Any]:

@@ -2,6 +2,7 @@ stages:
   - test
   - build
   - publish
+  - run
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
@@ -53,3 +54,23 @@ publish-agent:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
+
+# --- Run ForgeProof pipeline (manual trigger with ISSUE_IID) ---
+
+forgeproof-run:
+  stage: run
+  image: registry.gitlab.com/gitlab-ai-hackathon/participants/35326234:latest
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - cd /app
+    - python -m forgeproof.main run --issue-iid $ISSUE_IID --verbose --json
+  artifacts:
+    paths:
+      - /app/*.rpack
+    when: always
+    expire_in: 30 days
+  rules:
+    - if: $ISSUE_IID
+      when: manual
+      allow_failure: true

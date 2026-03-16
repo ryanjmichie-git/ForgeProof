@@ -10,7 +10,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from forgeproof.config import ForgeProofConfig
 from forgeproof.models import RunState
 
 log = logging.getLogger(__name__)

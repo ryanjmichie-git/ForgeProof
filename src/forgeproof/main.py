@@ -62,6 +62,7 @@ def _auto_clone_repo(log: logging.Logger) -> Path | None:
 def run(
     repo: Path = typer.Option(None, help="Repository root (auto-detected in CI)"),
     issue_file: Path | None = typer.Option(None, help="Local issue JSON/MD file (dev mode)"),
+    issue_iid: int | None = typer.Option(None, "--issue-iid", help="GitLab issue IID (CI mode)"),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
     output_json: bool = typer.Option(False, "--json", help="Output run state as JSON"),
 ) -> None:
@@ -79,7 +80,7 @@ def run(
     config = load_config(repo_root)
     orch = Orchestrator(config)
 
-    # Load issue from file in local dev mode
+    # Load issue context (priority: file > API > AI_FLOW_CONTEXT handled in orchestrator)
     if issue_file:
         text = issue_file.read_text(encoding="utf-8")
         if issue_file.suffix == ".json":
@@ -88,8 +89,27 @@ def run(
         else:
             from forgeproof.context.issue_loader import load_issue_from_markdown
             orch.state.issue = load_issue_from_markdown(text)
+    elif issue_iid is not None:
+        if not config.gitlab_token or not config.project_id:
+            log.error("--issue-iid requires CI_JOB_TOKEN and CI_PROJECT_ID")
+            raise typer.Exit(code=1)
+        from forgeproof.gitlab.api import GitLabAPI
+        from forgeproof.context.issue_loader import load_issue_from_gitlab
+        api = GitLabAPI(config.gitlab_base_url, config.gitlab_token)
+        api_data = api.get_issue(config.project_id, issue_iid)
+        orch.state.issue = load_issue_from_gitlab(api_data)
+        log.info("Loaded issue #%d: %s", issue_iid, orch.state.issue.issue_title)
 
     state = orch.run()
+
+    # Copy .rpack to CWD for CI artifact collection
+    if state.pack_path:
+        import shutil
+        pack = Path(state.pack_path)
+        if pack.exists():
+            dest = Path.cwd() / pack.name
+            shutil.copy2(pack, dest)
+            log.info("Copied pack to %s", dest)
 
     if output_json:
         print(json.dumps(state.model_dump(), indent=2, default=str))

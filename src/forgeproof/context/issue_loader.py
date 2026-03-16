@@ -74,6 +74,18 @@ def load_issue_from_markdown(text: str) -> IssueInfo:
     )
 
 
+def load_issue_from_gitlab(api_data: dict) -> IssueInfo:
+    """Convert a GitLab API issue response to IssueInfo."""
+    return IssueInfo(
+        project_id=_int(api_data.get("project_id", 0)),
+        issue_iid=_int(api_data.get("iid", 0)),
+        issue_title=api_data.get("title", ""),
+        issue_body=api_data.get("description", ""),
+        labels=api_data.get("labels", []),
+        comments=[],
+    )
+
+
 def extract_acceptance_criteria(body: str) -> list[str]:
     """Pull acceptance criteria from issue body markdown."""
     criteria: list[str] = []
