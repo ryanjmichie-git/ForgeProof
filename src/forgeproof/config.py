@@ -78,7 +78,8 @@ def load_config(repo_root: Path | None = None) -> ForgeProofConfig:
     cfg.anthropic_custom_headers = os.environ.get("AI_FLOW_AI_GATEWAY_HEADERS", "")
     cfg.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")  # local dev
     cfg.gitlab_base_url = os.environ.get("GITLAB_BASE_URL", "https://gitlab.com")
-    cfg.gitlab_token = os.environ.get("CI_JOB_TOKEN", os.environ.get("GITLAB_TOKEN", ""))
+    # Prefer GITLAB_TOKEN (PAT) over CI_JOB_TOKEN for broader API permissions
+    cfg.gitlab_token = os.environ.get("GITLAB_TOKEN", os.environ.get("CI_JOB_TOKEN", ""))
     cfg.ai_flow_context = os.environ.get("AI_FLOW_CONTEXT", "")
     cfg.ai_flow_input = os.environ.get("AI_FLOW_INPUT", "")
     cfg.project_id = int(os.environ.get("CI_PROJECT_ID", "0"))

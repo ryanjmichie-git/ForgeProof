@@ -85,29 +85,82 @@ def run_evaluate(orch: "Orchestrator") -> str:
     return f"{status} (coverage={coverage:.0f}%, gates={len(gate_failures)} failures)"
 
 
+def _detect_target_subdir(file_changes: list, repo_root: Path) -> Path:
+    """Detect if generated files target a subdirectory (e.g., demo/seed-repo/).
+
+    If all generated file paths share a common prefix that is a directory
+    in the repo with its own pyproject.toml, use that as the target root.
+    """
+    if not file_changes:
+        return repo_root
+
+    paths = [fc.path for fc in file_changes]
+    # Find common prefix of all generated file paths
+    parts_list = [Path(p).parts for p in paths]
+    common = []
+    for level_parts in zip(*parts_list):
+        if len(set(level_parts)) == 1:
+            common.append(level_parts[0])
+        else:
+            break
+
+    # Walk down the common prefix to find the deepest directory with pyproject.toml
+    candidate = repo_root
+    for part in common:
+        next_candidate = candidate / part
+        if next_candidate.is_dir() and (next_candidate / "pyproject.toml").exists():
+            return next_candidate
+        if not next_candidate.is_dir():
+            break
+        candidate = next_candidate
+
+    return repo_root
+
+
+def _strip_prefix(path: str, prefix: Path, repo_root: Path) -> str:
+    """Strip the target subdirectory prefix from a file path."""
+    if prefix == repo_root:
+        return path
+    try:
+        rel = Path(path).relative_to(prefix.relative_to(repo_root))
+        return str(rel)
+    except ValueError:
+        return path
+
+
 def _write_workspace(orch: "Orchestrator", workspace: Path) -> None:
     """Write generated files into the eval workspace, overlaid on repo context."""
     import shutil
 
     cfg = orch.config
 
-    # Copy the target repo as the base (if it's reasonable size)
-    src_dir = cfg.repo_root / "src"
-    tests_dir = cfg.repo_root / "tests"
+    # Detect if generated files target a subdirectory (e.g., demo/seed-repo/)
+    target_root = _detect_target_subdir(orch.state.file_changes, cfg.repo_root)
+    if target_root != cfg.repo_root:
+        log.info("Detected target subdirectory: %s", target_root.relative_to(cfg.repo_root))
+
+    # Copy the target project as the base
+    src_dir = target_root / "src"
+    tests_dir = target_root / "tests"
     if src_dir.is_dir():
         shutil.copytree(src_dir, workspace / "src", dirs_exist_ok=True)
     if tests_dir.is_dir():
         shutil.copytree(tests_dir, workspace / "tests", dirs_exist_ok=True)
 
-    # Copy config files needed for evaluation
+    # Copy config files from the TARGET project (not ForgeProof's own)
     for name in ("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "ruff.toml"):
-        src = cfg.repo_root / name
+        src = target_root / name
         if src.is_file():
             shutil.copy2(src, workspace / name)
 
-    # Overlay generated files
+    # Overlay generated files (strip target subdirectory prefix)
     for fc in orch.state.file_changes:
-        dest = workspace / fc.path
+        # Sanitize path: reject absolute paths and traversals
+        if fc.path.startswith("/") or ".." in Path(fc.path).parts:
+            log.warning("Skipping unsafe file path: %s", fc.path)
+            continue
+        stripped = _strip_prefix(fc.path, target_root, cfg.repo_root)
+        dest = workspace / stripped
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(fc.content, encoding="utf-8")
 

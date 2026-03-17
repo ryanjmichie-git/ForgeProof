@@ -17,15 +17,16 @@ class GitLabAPI:
 
     def __init__(self, base_url: str, token: str) -> None:
         self._base = base_url.rstrip("/")
+        # PATs (glpat-*) use PRIVATE-TOKEN; CI job tokens use JOB-TOKEN
+        if token.startswith("glpat-"):
+            headers = {"PRIVATE-TOKEN": token}
+        else:
+            headers = {"JOB-TOKEN": token}
         self._client = httpx.Client(
             base_url=f"{self._base}/api/v4",
-            headers={"PRIVATE-TOKEN": token} if not token.startswith("glpat-") and token else {"PRIVATE-TOKEN": token},
+            headers=headers,
             timeout=_TIMEOUT,
         )
-        # CI_JOB_TOKEN uses Job-Token header instead
-        if token and not token.startswith("glpat-"):
-            self._client.headers["JOB-TOKEN"] = token
-            self._client.headers.pop("PRIVATE-TOKEN", None)
 
     def _get(self, path: str, **params: Any) -> Any:
         resp = self._client.get(path, params=params)

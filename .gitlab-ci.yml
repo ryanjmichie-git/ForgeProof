@@ -66,9 +66,10 @@ forgeproof-run:
     GIT_STRATEGY: none
   script:
     - cd /app
-    - python -m forgeproof.main run --issue-iid $ISSUE_IID --verbose --json
-    - ls -la /app/*.rpack /tmp/forgeproof_run_*/*.rpack 2>/dev/null || true
-    - cp -f /app/*.rpack "$CI_PROJECT_DIR/" 2>/dev/null; cp -f /tmp/forgeproof_run_*/*.rpack "$CI_PROJECT_DIR/" 2>/dev/null; ls -la "$CI_PROJECT_DIR/"*.rpack 2>/dev/null || echo "No .rpack found"
+    - python -m forgeproof.main run --issue-iid $ISSUE_IID --verbose --json || echo "ForgeProof exited with code $? (non-review-ready is expected)"
+    - cp -f /app/*.rpack "$CI_PROJECT_DIR/" 2>/dev/null || true
+    - cp -f /tmp/forgeproof_run_*/*.rpack "$CI_PROJECT_DIR/" 2>/dev/null || true
+    - ls -la "$CI_PROJECT_DIR/"*.rpack 2>/dev/null || echo "No .rpack artifact found"
   artifacts:
     paths:
       - "*.rpack"

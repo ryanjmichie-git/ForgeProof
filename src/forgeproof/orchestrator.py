@@ -196,8 +196,14 @@ class Orchestrator:
             try:
                 mr = run_mr_flow(self.config, self.state)
                 mr_url = mr.get("web_url", "")
-            except Exception:
+            except Exception as exc:
                 log.warning("MR creation failed", exc_info=True)
+                self.decision_log.append(
+                    phase="package",
+                    model_id="",
+                    decision_summary=f"MR creation failed: {exc}",
+                    status="failure",
+                )
 
         pack_size = output_path.stat().st_size
         parts = [f"Pack created ({pack_size} bytes)"]

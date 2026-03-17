@@ -102,12 +102,14 @@ def run(
 
     state = orch.run()
 
-    # Copy .rpack to CWD for CI artifact collection
+    # Copy .rpack for CI artifact collection (CI_PROJECT_DIR in CI, CWD locally)
     if state.pack_path:
         import shutil
         pack = Path(state.pack_path)
         if pack.exists():
-            dest = Path.cwd() / pack.name
+            ci_dir = os.environ.get("CI_PROJECT_DIR", "")
+            dest_dir = Path(ci_dir) if ci_dir else Path.cwd()
+            dest = dest_dir / pack.name
             shutil.copy2(pack, dest)
             log.info("Copied pack to %s", dest)
 
