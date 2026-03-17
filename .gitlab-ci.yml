@@ -59,15 +59,18 @@ publish-agent:
 
 forgeproof-run:
   stage: run
-  image: $CI_REGISTRY_IMAGE:latest
+  image:
+    name: $CI_REGISTRY_IMAGE:latest
+    entrypoint: [""]
   variables:
     GIT_STRATEGY: none
   script:
     - cd /app
     - python -m forgeproof.main run --issue-iid $ISSUE_IID --verbose --json
+    - cp -f /app/*.rpack $CI_PROJECT_DIR/ 2>/dev/null || true
   artifacts:
     paths:
-      - /app/*.rpack
+      - "*.rpack"
     when: always
     expire_in: 30 days
   rules:
