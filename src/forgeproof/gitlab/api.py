@@ -35,6 +35,8 @@ class GitLabAPI:
 
     def _post(self, path: str, json: dict[str, Any] | None = None) -> Any:
         resp = self._client.post(path, json=json)
+        if resp.status_code >= 400:
+            log.error("API POST %s returned %d: %s", path, resp.status_code, resp.text[:500])
         resp.raise_for_status()
         return resp.json()
 
@@ -65,8 +67,9 @@ class GitLabAPI:
         )
 
     def branch_exists(self, project_id: int, branch: str) -> bool:
+        from urllib.parse import quote
         try:
-            self._get(f"/projects/{project_id}/repository/branches/{branch}")
+            self._get(f"/projects/{project_id}/repository/branches/{quote(branch, safe='')}")
             return True
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:

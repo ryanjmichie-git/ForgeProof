@@ -88,31 +88,42 @@ def run_evaluate(orch: "Orchestrator") -> str:
 def _detect_target_subdir(file_changes: list, repo_root: Path) -> Path:
     """Detect if generated files target a subdirectory (e.g., demo/seed-repo/).
 
-    If all generated file paths share a common prefix that is a directory
-    in the repo with its own pyproject.toml, use that as the target root.
+    Uses majority voting: if most generated file paths share a prefix that is
+    a directory in the repo with its own pyproject.toml, use that as the target.
+    This handles cases where Claude generates some files at the root level
+    (e.g., tests/test_health.py) alongside the target subdir files.
     """
     if not file_changes:
         return repo_root
 
     paths = [fc.path for fc in file_changes]
-    # Find common prefix of all generated file paths
-    parts_list = [Path(p).parts for p in paths]
-    common = []
-    for level_parts in zip(*parts_list):
-        if len(set(level_parts)) == 1:
-            common.append(level_parts[0])
-        else:
-            break
 
-    # Walk down the common prefix to find the deepest directory with pyproject.toml
-    candidate = repo_root
-    for part in common:
-        next_candidate = candidate / part
-        if next_candidate.is_dir() and (next_candidate / "pyproject.toml").exists():
-            return next_candidate
-        if not next_candidate.is_dir():
-            break
-        candidate = next_candidate
+    # Find candidate subdirectories that have their own pyproject.toml
+    candidates: dict[str, int] = {}  # relative subdir -> count of matching files
+
+    for p in paths:
+        parts = Path(p).parts
+        # Walk down the path components (exclude filename) to find a project root
+        candidate = repo_root
+        for part in parts[:-1]:
+            candidate = candidate / part
+            if candidate.is_dir() and (candidate / "pyproject.toml").exists():
+                key = str(candidate.relative_to(repo_root))
+                candidates[key] = candidates.get(key, 0) + 1
+                break
+
+    if not candidates:
+        return repo_root
+
+    # Pick the candidate matching the most files
+    best_key = max(candidates, key=lambda k: candidates[k])
+    best_count = candidates[best_key]
+
+    # Use the candidate if it matches at least 2 files or a majority
+    if best_count >= 2 or best_count > len(paths) / 2:
+        target = repo_root / best_key
+        log.info("Target subdir %s matched %d/%d generated files", best_key, best_count, len(paths))
+        return target
 
     return repo_root
 
@@ -159,6 +170,12 @@ def _write_workspace(orch: "Orchestrator", workspace: Path) -> None:
         if fc.path.startswith("/") or ".." in Path(fc.path).parts:
             log.warning("Skipping unsafe file path: %s", fc.path)
             continue
+        # Skip files that don't belong to the detected target subdirectory
+        if target_root != cfg.repo_root:
+            target_rel = str(target_root.relative_to(cfg.repo_root))
+            if not fc.path.startswith(target_rel):
+                log.info("Skipping file outside target subdir: %s", fc.path)
+                continue
         stripped = _strip_prefix(fc.path, target_root, cfg.repo_root)
         dest = workspace / stripped
         dest.parent.mkdir(parents=True, exist_ok=True)
