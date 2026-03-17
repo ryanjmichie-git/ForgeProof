@@ -67,7 +67,8 @@ forgeproof-run:
   script:
     - cd /app
     - python -m forgeproof.main run --issue-iid $ISSUE_IID --verbose --json
-    - cp -f /app/*.rpack $CI_PROJECT_DIR/ 2>/dev/null || true
+    - ls -la /app/*.rpack /tmp/forgeproof_run_*/*.rpack 2>/dev/null || true
+    - cp -f /app/*.rpack "$CI_PROJECT_DIR/" 2>/dev/null; cp -f /tmp/forgeproof_run_*/*.rpack "$CI_PROJECT_DIR/" 2>/dev/null; ls -la "$CI_PROJECT_DIR/"*.rpack 2>/dev/null || echo "No .rpack found"
   artifacts:
     paths:
       - "*.rpack"

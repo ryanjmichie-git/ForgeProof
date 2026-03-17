@@ -36,6 +36,9 @@ def run_evaluate(orch: "Orchestrator") -> str:
     results: list[CommandResult] = []
     gate_failures: list[str] = []
 
+    # Install project dependencies in the workspace if pyproject.toml exists
+    _install_deps(workspace)
+
     # Run deterministic evaluation commands in the workspace
     for cmd_cfg in cfg.evaluation:
         cr = _run_command(cmd_cfg.name, cmd_cfg.run, workspace)
@@ -107,6 +110,25 @@ def _write_workspace(orch: "Orchestrator", workspace: Path) -> None:
         dest = workspace / fc.path
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(fc.content, encoding="utf-8")
+
+
+def _install_deps(workspace: Path) -> None:
+    """Install project dependencies in the eval workspace if possible."""
+    pyproject = workspace / "pyproject.toml"
+    requirements = workspace / "requirements.txt"
+
+    if pyproject.exists():
+        cmd = "pip install -q -e '.[dev]' 2>/dev/null || pip install -q -e . 2>/dev/null || true"
+    elif requirements.exists():
+        cmd = "pip install -q -r requirements.txt 2>/dev/null || true"
+    else:
+        return
+
+    log.info("Installing project dependencies in eval workspace")
+    try:
+        subprocess.run(cmd, shell=True, cwd=str(workspace), capture_output=True, timeout=120)
+    except Exception:
+        log.warning("Dependency install failed; continuing without", exc_info=True)
 
 
 def _run_command(name: str, command: str, cwd: Path) -> CommandResult:
