@@ -99,17 +99,23 @@ def run_mr_flow(
     branch = create_branch_name(state.issue.issue_iid, state.issue.issue_title)
     state.git.work_branch = branch
 
-    if not api.branch_exists(pid, branch):
+    branch_existed = api.branch_exists(pid, branch)
+    if not branch_existed:
         api.create_branch(pid, branch, ref=state.git.base_branch)
     else:
         log.info("Branch %s already exists, reusing", branch)
 
     # 2. Commit generated files
     if state.file_changes:
+        # If branch already existed, files may already be on it from a prior run.
+        # Use "update" for all files to avoid "file already exists" errors.
+        # For new branches, use create/update based on the action.
         actions = []
         for fc in state.file_changes:
-            # Use "create" for new files, "update" for modifications
-            action = "create" if fc.action == "create" else "update"
+            if branch_existed:
+                action = "update"
+            else:
+                action = "create" if fc.action == "create" else "update"
             actions.append({
                 "action": action,
                 "file_path": fc.path,
@@ -126,20 +132,27 @@ def run_mr_flow(
         state.git.head_commit = commit.get("id", "")
         log.info("Committed %d files: %s", len(actions), commit.get("id", "")[:12])
 
-    # 3. Create merge request
+    # 3. Create merge request (skip if one already exists for this branch)
     is_draft = state.evaluation is not None and not state.evaluation.review_ready
     mr_description = _build_mr_description(state)
 
     mr_title = f"[ForgeProof] {state.issue.issue_title}"
-    mr = api.create_merge_request(
-        pid,
-        source_branch=branch,
-        target_branch=state.git.base_branch,
-        title=mr_title,
-        description=mr_description,
-        draft=is_draft,
-        labels="forgeproof,ai-generated",
-    )
+    try:
+        mr = api.create_merge_request(
+            pid,
+            source_branch=branch,
+            target_branch=state.git.base_branch,
+            title=mr_title,
+            description=mr_description,
+            draft=is_draft,
+            labels="forgeproof,ai-generated",
+        )
+    except Exception as exc:
+        if "already exists" in str(exc).lower():
+            log.info("MR already exists for branch %s, skipping creation", branch)
+            mr = {"web_url": ""}
+        else:
+            raise
 
     mr_url = mr.get("web_url", "")
     log.info("MR created: %s (draft=%s)", mr_url, is_draft)
