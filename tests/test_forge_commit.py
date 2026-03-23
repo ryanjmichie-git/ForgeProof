@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import os
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 
 def test_capture_commit_metadata_returns_dict():
@@ -159,10 +155,10 @@ def test_rpack_is_verifiable(tmp_path):
     # Extract and verify
     extract_dir = tmp_path / "extracted"
     extract_rpack(rpack_path, extract_dir)
-    result = verify_pack_directory(extract_dir, pubkey_path=devkey)
+    outcome = verify_pack_directory(extract_dir, pubkey_path=devkey)
 
-    assert result.verified is True
-    assert "CLAIM-INTEGRITY-001" in result.claims_verified
+    assert outcome.result.verified is True
+    assert "CLAIM-INTEGRITY-001" in outcome.result.claims_verified
 
 
 def test_null_parent_sha_for_initial_commit():
