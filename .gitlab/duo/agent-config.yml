@@ -1,42 +1,8 @@
-# ForgeProof — GitLab Duo Agent Platform external agent configuration
-# Docs: https://docs.gitlab.com/ee/user/duo_workflow/external_agents/
+# ForgeProof — GitLab Duo Agent Platform configuration
+# Docs: https://docs.gitlab.com/user/duo_agent_platform/flows/execution/
 
-name: forgeproof
-description: >
-  AI agent that converts GitLab issues into review-ready merge requests
-  with tests, evaluation scoring, and cryptographically signed provenance bundles.
+image: python:3.11-slim
 
-# Docker image for the agent
-image: $CI_REGISTRY_IMAGE:latest
-
-# Inject GitLab AI Gateway token for Anthropic Claude access
-injectGatewayToken: true
-
-# Entry point: the ForgeProof orchestrator
-setup_script: |
-  cd /app
-  python -m forgeproof.main run --verbose
-
-# Environment variables forwarded to the agent container
-env:
-  - AI_FLOW_CONTEXT
-  - AI_FLOW_INPUT
-  - AI_FLOW_AI_GATEWAY_TOKEN
-  - AI_FLOW_AI_GATEWAY_HEADERS
-  - CI_PROJECT_ID
-  - CI_JOB_TOKEN
-  - CI_PROJECT_URL
-  - CI_DEFAULT_BRANCH
-
-# Trigger: @mention on an issue
-triggers:
-  - type: mention
-    resource: issue
-
-# Capabilities the agent needs
-permissions:
-  - read_repository
-  - write_repository
-  - create_merge_request
-  - read_issue
-  - write_issue
+setup_script:
+  - apt-get update -qq && apt-get install -y -qq git > /dev/null 2>&1
+  - pip install -q pyyaml
