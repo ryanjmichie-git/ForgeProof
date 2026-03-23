@@ -7,6 +7,8 @@ build/
 .ruff_cache/
 .mypy_cache/
 *.rpack
+!provenance/*.rpack
+.forge-commit.log
 .env
 *.key
 *.pem

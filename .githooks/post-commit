@@ -1,0 +1,11 @@
+#!/bin/bash
+# ForgeProof Lite: sign commit provenance after each commit
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Skip provenance commits to prevent infinite recursion
+COMMIT_MSG="$(git log -1 --format=%s)"
+if echo "$COMMIT_MSG" | grep -q "^provenance:"; then
+    exit 0
+fi
+
+python "$REPO_ROOT/scripts/forge_commit.py" 2>>"$REPO_ROOT/.forge-commit.log" || true
