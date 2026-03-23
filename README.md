@@ -164,6 +164,35 @@ From a real pipeline run on GitLab CI:
 
 ---
 
+## Provenance Verification (Hackathon Branch)
+
+On the `hackathon-native` branch, every commit is automatically signed into a tamper-evident `.rpack` provenance bundle via a post-commit git hook. No API keys or CI required.
+
+### Setup
+
+```bash
+git config core.hooksPath .githooks
+```
+
+### Verify a Commit's Provenance
+
+```bash
+cd Replication-Pack
+python cmd/rpb.py verify ../provenance/<sha>.rpack --pubkey devkey.ed25519 --json
+```
+
+Expected output: `{"verified": true, "claims_verified": ["CLAIM-INTEGRITY-001"], ...}`
+
+### What's Inside Each .rpack
+
+- `SOURCE/commit.json` — Commit SHA, author, timestamp, message, changed file hashes
+- `MANIFEST.json` — Pack metadata with integrity claim
+- `HASHES.json` — SHA-256 hashes of all bundle files
+- `SIGNATURES/` — Ed25519 signature over the root digest
+- `VERIFY/` — Verification instructions
+
+---
+
 ## Tech Stack
 
 - **AI:** Claude (Anthropic API) via GitLab Duo
