@@ -20,3 +20,4 @@ Simple FastAPI-based Todo REST API with in-memory storage.
 - Never modify `.gitlab-ci.yml` or `.env*` files
 - Keep dependencies minimal
 - All new endpoints must have tests
+- ALWAYS follow the provenance signing instructions in the root AGENTS.md before committing
