@@ -4,5 +4,5 @@
 image: python:3.11-slim
 
 setup_script:
-  - apt-get update -qq && apt-get install -y -qq git > /dev/null 2>&1
+  - apt-get update -qq && apt-get install -y -qq git nodejs npm > /dev/null 2>&1
   - pip install -q pyyaml
