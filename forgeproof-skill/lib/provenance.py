@@ -159,10 +159,8 @@ def build(args: argparse.Namespace) -> None:
     run_state_path = Path(args.run_state)
     decision_log_path = Path(args.decision_log)
     output_path = Path(args.output)
-    repo_root = Path(args.repo_root)
 
     run_state = _read_json_file(run_state_path)
-    decision_entries = _read_jsonl_file(decision_log_path)
 
     # 3. Load config (optional)
     config_path = Path(args.config) if args.config else None
