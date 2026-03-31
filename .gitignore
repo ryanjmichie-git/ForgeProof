@@ -13,3 +13,7 @@ build/
 *.key
 *.pem
 .claude/
+.forgeproof/lib/
+.forgeproof/ephemeral.*
+.forgeproof/last-run.json
+.forgeproof/decision-log.jsonl
